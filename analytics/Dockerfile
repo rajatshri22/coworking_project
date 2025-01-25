@@ -1,27 +1,16 @@
-version: '3.8'
-
-services:
-  analytics-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"  # Forward host port 3000 to container port 3000
-    environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=myuser
-      - DB_PASSWORD=mypassword
-      - DB_NAME=mydatabase
-    depends_on:
-      - postgres
-
-  postgres:
-    image: postgres:13
-    restart: always
-    environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mydatabase
-    ports:
-      - "5432:5432"  # Forward host port 5432 to container port 5432
+FROM python:3.9-slim-buster
+COPY . /app
+WORKDIR /app
+# Update the local package index with the latest packages from the repositories
+#RUN apt update -y
+# Install a couple of packages to successfully install postgresql server locally
+#RUN apt install build-essential libpq-dev -y
+# Update python modules to successfully build the required modules
+#RUN pip install --upgrade pip setuptools wheel
+RUN pip install -r requirements.txt
+#Run docker build --build-arg DB_USERNAME=*** --build-arg DB_PASSWORD=*** -t <imagename> .
+ARG DB_USERNAME=$DB_USERNAME
+ARG DB_PASSWORD=$DB_PASSWORD
+ENV DB_USERNAME $DB_USERNAME
+ENV DB_PASSWORD $DB_PASSWORD
+CMD python app.py
