@@ -1,16 +1,17 @@
-FROM python:3.9-slim-buster
-COPY . /app
-WORKDIR /app
-# Update the local package index with the latest packages from the repositories
-#RUN apt update -y
-# Install a couple of packages to successfully install postgresql server locally
-#RUN apt install build-essential libpq-dev -y
-# Update python modules to successfully build the required modules
-#RUN pip install --upgrade pip setuptools wheel
+FROM python:3.10-slim-buster
+USER root
+WORKDIR /src
+COPY ./analytics/requirements.txt requirements.txt
+# Dependencies required for psycopg2 (used for Postgres client)
+RUN apt update -y && apt install -y build-essential libpq-dev
+# # Dependencies are installed during build time in the container itself so we don't have OS mismatch
 RUN pip install -r requirements.txt
-#Run docker build --build-arg DB_USERNAME=*** --build-arg DB_PASSWORD=*** -t <imagename> .
-ARG DB_USERNAME=$DB_USERNAME
-ARG DB_PASSWORD=$DB_PASSWORD
-ENV DB_USERNAME $DB_USERNAME
-ENV DB_PASSWORD $DB_PASSWORD
+COPY ./analytics .
 CMD python app.py
+
+# FROM python:3.10-slim-buster
+# WORKDIR /src
+# COPY ./test/requirements.txt requirements.txt
+# RUN pip install -r requirements.txt
+# COPY ./test .
+#CMD python app.py
