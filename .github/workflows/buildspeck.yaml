@@ -61,10 +61,6 @@ jobs:
         run: |
           kubectl config view
 
-      - name: kubectl get namespace
-        working-directory: analytics
-        run: |
-          kubectl get namespace
 
       - name: kubectl get storageclass
         working-directory: analytics
