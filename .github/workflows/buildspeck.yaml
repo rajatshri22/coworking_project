@@ -45,5 +45,5 @@ jobs:
 
       - name: Push Docker image to ECR
         run: |
-          docker push ${{ secrets.AWS_ECR_REPOSITORY }}:${{ env.GIT_SHA }}
+          docker push ${{ secrets.AWS_ECR_REPOSITORY }}:latest
         working-directory: analytics/
