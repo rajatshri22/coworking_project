@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-info
+data:
+  DB_NAME: udagram
+  DB_USERNAME: postgres
+  DB_HOST: postgres-udacity-postgresql
+  DB_PORT: 5432
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-password
+type: Opaque
+data:
+  ENCODED_PASSWORD: <OUTPUT OF `echo -n 'the password' | base64`>
