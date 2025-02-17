@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: db-info
 data:
-  DB_NAME: udagram
-  DB_USERNAME: postgres
-  DB_HOST: postgres-udacity-postgresql
-  DB_PORT: 5432
+  DB_NAME: mydatabase
+  DB_USERNAME: myuser
+  DB_HOST: 127.0.0.1
+  DB_PORT: 5433
