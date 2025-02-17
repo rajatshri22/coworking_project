@@ -96,11 +96,34 @@ jobs:
         run: |
           docker push ${{ secrets.AWS_ECR_REPOSITORY }}:latest
         working-directory: analytics/
-        
-      
 
-
-
+      - name: coworking
+        env :
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: ps-postgresql
+              key: DB_HOST  
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: ps-postgresql
+              key: DB_PORT 
+        - name: DB_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: ps-postgresql
+              key: DB_USERNAME
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: ps-postgresql
+              key: DB_NAME
+        - name: DB_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: ps-postgresql
+              key: DB_PASSWORD
 
 
       

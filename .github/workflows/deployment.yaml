@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+      - name: my-app-container
+        image: your-account-id.dkr.ecr.your-region.amazonaws.com/your-repo-name:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: my-app-config
+              key: DB_HOST
+        - name: DB_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: my-app-config
+              key: DB_USERNAME
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: my-app-config
+              key: DB_PORT
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: my-app-config
+              key: DB_NAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: my-app-secret
+              key: DB_PASSWORD
