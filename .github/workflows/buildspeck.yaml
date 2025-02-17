@@ -21,13 +21,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1  
 
-    # Build the Image
-      - name: Build Docker image
-        run: |
-          docker build -t analytics:latest .
-        working-directory: analytics/
-
-
       - name: Set up ECR login
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -37,11 +30,17 @@ jobs:
 
       - name: Log in to AWS ECR
         run: |
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR_REPOSITORY }}
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin analytics
+
+    # Build the Image
+      - name: Build Docker image
+        run: |
+          docker build -t analytics:latest .
+        working-directory: analytics/
 
       - name: Tag Docker image
         run: |
-          docker tag analytics:latest ${{ secrets.AWS_ECR_REPOSITORY }}:${{ env.GIT_SHA }}
+          docker tag analytics:latest ${{ secrets.AWS_ECR_REPOSITORY }}:latest
         working-directory: analytics/
 
       - name: Push Docker image to ECR
