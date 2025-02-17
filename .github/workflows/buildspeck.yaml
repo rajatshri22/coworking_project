@@ -22,16 +22,6 @@ jobs:
           aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # Download kubectl binary
-      - name: Download kubectl binaries
-        run: |
-          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-          
-      # Install kubectl
-      - name: Install Kubectl
-        run: |
-          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-          kubectl version --client
 
       - name: Set up AWS credentials
         run: |
