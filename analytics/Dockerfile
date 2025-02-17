@@ -1,35 +1,17 @@
-# Use an official Python runtime as a parent image
-FROM python:3.8
-
-# Set environment variables
-ENV PYTHONUNBUFFERED 1
-ENV POSTGRES_DB mydb
-ENV POSTGRES_USER myuser
-ENV POSTGRES_PASSWORD mypassword
-
-# Create a directory for your application
-RUN mkdir /app
-
-# Set the working directory to /app
+FROM python:3.10-slim-buster
+USER root
+COPY . /app
 WORKDIR /app
-
-# Copy the contents of the "analytics" folder (app.py, config.py, requirements.txt)
-COPY analytics/ /app
-
-# Install any necessary dependencies
+#COPY ./analytics/requirements.txt requirements.txt
+# Dependencies required for psycopg2 (used for Postgres client)
+RUN apt update -y && apt install -y build-essential libpq-dev
+# # Dependencies are installed during build time in the container itself so we don't have OS mismatch
 RUN pip install -r requirements.txt
+#COPY analytics .
+#Run docker build --build-arg DB_USERNAME=*** --build-arg DB_PASSWORD=*** -t <imagename> .
+ARG DB_USERNAME=$DB_USERNAME
+ARG DB_PASSWORD=$DB_PASSWORD
+ENV DB_USERNAME $DB_USERNAME
+ENV DB_PASSWORD $DB_PASSWORD
 
-# Install PostgreSQL client
-RUN apt-get update && apt-get install -y postgresql-client
-
-# Create a directory for your SQL files
-RUN mkdir /sql
-
-# Copy the SQL files from the "db" folder into the container
-COPY db/ /sql
-
-# Expose any necessary ports
-EXPOSE 8000
-
-# Run your application
-CMD ["python", "app.py"]
+CMD python app.py

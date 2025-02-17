@@ -33,7 +33,7 @@ helm repo add <REPO_NAME> https://charts.bitnami.com/bitnami
 helm install <SERVICE_NAME> <REPO_NAME>/postgresql
 ```
 
-This should set up a Postgre deployment at `<SERVICE_NAME>-postgresql.default.svc.cluster.local` in your Kubernetes cluster. You can verify it by running `kubectl svc`
+This should set up a Postgre deploymhent at `<SERVICE_NAME>-postgresql.default.svc.cluster.local` in your Kubernetes cluster. You can verify it by running `kubectl svc`
 
 By default, it will create a username `postgres`. The password can be retrieved with the following command:
 ```bash
