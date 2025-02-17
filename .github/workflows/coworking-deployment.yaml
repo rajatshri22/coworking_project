@@ -1,0 +1,154 @@
+name: Frontend Continuous Deployment
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main  
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    # Check out the code from the repository.
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1  
+
+      - name: Set up ECR login
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Check up AWS credentials
+        run: aws sts get-caller-identity
+
+      - name: Log in to AWS ECR
+        run: |
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR_REPOSITORY }}
+
+    # Build the Image
+      - name: Build Docker image
+        run: |
+          docker build -t analytics:latest .
+        working-directory: analytics/
+
+      - name: Tag Docker image
+        run: |
+          docker tag analytics:latest ${{ secrets.AWS_ECR_REPOSITORY }}:latest
+        working-directory: analytics/
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push ${{ secrets.AWS_ECR_REPOSITORY }}:latest
+        working-directory: analytics/
+        
+
+  deploy:
+    name: Deploy coworking
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+  
+      # Download kubectl binary
+      - name: Download kubectl binaries
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          
+      # Install kubectl
+      - name: Install Kubectl
+        run: |
+          sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+          kubectl version --client
+
+      - name: Set up AWS credentials
+        run: |
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV  
+
+
+      - name: Log in to AWS ECR
+        run: |
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR_REPOSITORY }}
+
+    # Build the Image
+      - name: Build Docker image
+        run: |
+          docker build -t analytics:latest .
+        working-directory: analytics/
+
+      - name: Tag Docker image
+        run: |
+          docker tag analytics:latest ${{ secrets.AWS_ECR_REPOSITORY }}:latest
+        working-directory: analytics/
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push ${{ secrets.AWS_ECR_REPOSITORY }}:latest
+        working-directory: analytics/
+        
+      
+
+
+
+
+
+      
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name cluster --region us-east-1
+        working-directory: starter/frontend
+
+      - name: Kubectl rollout
+        run: kubectl rollout restart deploy frontend
+        working-directory: starter/frontend
+
+
+      - name: Set image tag to newer version
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: frontend
+          IMAGE_TAG: ${{ github.sha }}
+        run: cd k8s && kustomize edit set image frontend=$REGISTRY/$REPOSITORY:$IMAGE_TAG
+        working-directory: starter/frontend
+
+
+      - name: Deploy application to EKS cluster
+        run: cd k8s && kustomize build | kubectl apply -f -
+        working-directory: starter/frontend
+
+      - name: Cluster details
+        run: |
+          kubectl get pods -A
+          kubectl get svc -A
+          kubectl describe pods -A
+        working-directory: starter/frontend
+
+      - name: Get kubectl services
+        working-directory: starter/frontend/k8s
+        run: |
+          kubectl get services
+
+      - name: Get kubectl svc
+        working-directory: starter/frontend/k8s
+        run: |
+          kubectl get svc
+
+      - name: Get kubectl pod
+        working-directory: starter/frontend/k8s
+        run: |
+          kubectl get pod
+
+      - name: Get frontend url
+        working-directory: starter/frontend/k8s
+        run: |
+          kubectl get svc -A
