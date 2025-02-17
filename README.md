@@ -1,4 +1,4 @@
-
+# Coworking Space Service Extension
 The Coworking Space Service is a set of APIs that enables users to request one-time tokens and administrators to authorize access to a coworking space. This service follows a microservice pattern and the APIs are split into distinct services that can be deployed and managed independently of one another.
 
 For this project, you are a DevOps engineer who will be collaborating with a team that is building an API for business analysts. The API provides business analysts basic analytics data on user activity in the service. The application they provide you functions as expected locally and you are expected to help build a pipeline to deploy it in Kubernetes.
@@ -33,7 +33,7 @@ helm repo add <REPO_NAME> https://charts.bitnami.com/bitnami
 helm install <SERVICE_NAME> <REPO_NAME>/postgresql
 ```
 
-This should set up a Postgre deploymhent at `<SERVICE_NAME>-postgresql.default.svc.cluster.local` in your Kubernetes cluster. You can verify it by running `kubectl svc`
+This should set up a Postgre deployment at `<SERVICE_NAME>-postgresql.default.svc.cluster.local` in your Kubernetes cluster. You can verify it by running `kubectl svc`
 
 By default, it will create a username `postgres`. The password can be retrieved with the following command:
 ```bash
@@ -129,3 +129,67 @@ Please provide up to 3 sentences for each suggestion. Additional content in your
 ### Best Practices
 * Dockerfile uses an appropriate base image for the application being deployed. Complex commands in the Dockerfile include a comment describing what it is doing.
 * The Docker images use semantic versioning with three numbers separated by dots, e.g. `1.2.1` and  versioning is visible in the  screenshot. See [Semantic Versioning](https://semver.org/) for more details.
+
+### Instructions
+1. Chmod to install dependencies:
+   `chmod 755 ./scripts/*`
+   
+2. Install eks and helm
+   `./scripts/install-eksctl.sh && ./scripts/install-helm.sh`
+   
+3. Init cluster eks
+   
+   `eksctl create cluster --name my-cluster --region us-east-1 --nodegroup-name my-nodes --node-type t3.small --nodes 1 --nodes-min 1 --nodes-max 2`
+
+    Update context: `aws eks --region us-east-1 update-kubeconfig --name my-cluster`
+   
+5. Create configmap contains sqls for helmchart and install postgresql by helm:
+
+       	export POSTGRES_PASSWORD=$(kubectl get secret --namespace default db-password-secret -o jsonpath="{.data.db-password}" | base64 -d)
+	kubectl port-forward svc/postgresql-service 5433:5432 & 
+	export DB_USERNAME=myuser
+	export DB_PASSWORD=${POSTGRES_PASSWORD}
+	export DB_HOST=127.0.0.1
+	export DB_PORT=5433
+	export DB_NAME=mydatabase
+	PGPASSWORD="$DB_PASSWORD" psql --host 127.0.0.1 -U myuser -d mydatabase -p 5433 < 1_create_tables.sql
+	PGPASSWORD="$DB_PASSWORD" psql --host 127.0.0.1 -U myuser -d mydatabase -p 5433 < 2_seed_users.sql
+	PGPASSWORD="$DB_PASSWORD" psql --host 127.0.0.1 -U myuser -d mydatabase -p 5433 < 3_seed_tokens.sql
+	kubectl get pods
+	kubectl exec -it postgresql-7c6f685595-j4ht5 -- bash
+	psql -U myuser -d first-db
+
+5. Create ecr repository named: analytics
+
+6. Create CodeBuild for CI project and trigger automaticlly
+
+Add permission to push docker image to ecr:
+
+    ```
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "ecr:*"
+                ],
+                "Resource": [
+                    "*"
+                ]
+            }
+        ]
+    }
+    ```
+
+7. Create configmap, secret for environment db 
+
+    `cd deployment && kubectl apply -f configmap.yaml && kubectl apply -f coworking.yaml`
+
+8. Add logging:
+
+Add policy to worker node role 
+
+`aws iam attach-role-policy --role-name arn:aws:iam::042404870935:role/eksctl-my-cluster-nodegroup-my-nod-NodeInstanceRole-j2Vbv8DjgBdk --policy-arn arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy`
+
+Add addon:  `aws eks create-addon --addon-name amazon-cloudwatch-observability --cluster-name my-cluster`
