@@ -4,21 +4,13 @@ import os
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta
 from flask import jsonify, request
-from sqlalchemy import and_, text, Column, Integer
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import and_, text
 from random import randint
-
+import werkzeug.utils
 from config import app, db
 
 
 port_number = int(os.environ.get("APP_PORT", 5153))
-
-Base = declarative_base()
-
-
-class Token(Base):
-    __tablename__ = "tokens"
-    id = Column(Integer, primary_key=True)
 
 
 @app.route("/health_check")
@@ -29,7 +21,7 @@ def health_check():
 @app.route("/readiness_check")
 def readiness_check():
     try:
-        count = db.session.query(Token).count()
+        count = db.session.execute(text("SELECT COUNT(*) FROM tokens")).scalar()
     except Exception as e:
         app.logger.error(e)
         return "failed", 500
