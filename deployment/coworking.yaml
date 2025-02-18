@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: coworking
-        image: 316452265086.dkr.ecr.us-east-1.amazonaws.com/chungvv3/coworking-space:3
+        image: 042404870935.dkr.ecr.us-east-1.amazonaws.com/analytics:latest
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
