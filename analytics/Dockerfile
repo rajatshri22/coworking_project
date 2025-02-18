@@ -1,5 +1,4 @@
 FROM python:3.10-slim-buster
-FROM --platform=linux/amd64 042404870935.dkr.ecr.us-east-1.amazonaws.com/analytics:latest
 USER root
 COPY . /app
 WORKDIR /app
