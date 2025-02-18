@@ -46,11 +46,8 @@ spec:
           timeoutSeconds: 5
         envFrom:
         - configMapRef:
-            name: db-info
+            name: postgresql-service
         env:
         - name: DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: db-password
-              key: ENCODED_PASSWORD
+          value: mypassword
       restartPolicy: Always
